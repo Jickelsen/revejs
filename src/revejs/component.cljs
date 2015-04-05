@@ -1,0 +1,12 @@
+(ns revejs.component)
+
+(defrecord Position [x y a])
+(defrecord Velocity [x y a])
+(defrecord Ship [])
+(defrecord Ship1 [])
+(defrecord Ship2 [])
+(defrecord Score1 [score])
+(defrecord Score2 [score])
+(defrecord Score [])
+(defrecord Shot [])
+(defrecord Renderer [renderer])
