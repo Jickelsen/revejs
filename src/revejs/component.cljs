@@ -2,6 +2,10 @@
 
 (defrecord Position [x y a])
 (defrecord Velocity [x y a])
+(defrecord Max_Thrust [max-thrust])
+(defrecord Max_Velocity [max-velocity])
+(defrecord Max_Velocity [max-velocity])
+(defrecord TT [tt])
 (defrecord Ship [])
 (defrecord Ship1 [])
 (defrecord Ship2 [])

@@ -1,10 +1,10 @@
 (ns revejs.core
   (:require [quil.core :as q :include-macros true]
             [revejs.update :as dynamic-update]
-            [revejs.setup :refer [tt]]
+            [revejs.setup :refer [game-state ship1-history ship2-history tt]]
             ;; [revejs.setup :as dynamic-setup]
             [brute.entity :as e]
-            [revejs.component :as c :refer [Ship Ship1 Ship2 Position Velocity Renderer]]
+            [revejs.component :as c :refer [Ship Ship1 Ship2 Position Velocity TT Renderer Max_Thrust Max_Velocity]]
             ;; [revejs.shot :as s]
             [brute.system :as s]
             [figwheel.client :as fw]
@@ -17,26 +17,18 @@
 (def HEIGHT 500)
 (def FRAMERATE 60)
 
-(def game-state (atom 0))
-
-(def game-history (atom [@game-state]))
-
-;; (add-watch game-state :history
-  ;; (fn [_ _ _ n]
-    ;; (when-not (= (last @game-history) n)
-      ;; (swap! game-history conj n))))
-
-(defn render-ship []
-  (do
-    (q/fill 50 80 50)
-    (q/rect -2 0 5 14)
-    ;; (if (= variant 1)
+(defn render-ship [variant]
+  (q/fill 50 80 50)
+  (q/rect -2 0 5 14)
+  (cond 
+    (= variant 1)
     (q/fill 100 220 100)
-    ;; (q/fill 100 100 220)
-    ;; )
-    (q/triangle 0 -10 25 0 0  10)
-    (q/fill 30 100 30)
-    (q/ellipse 8 0 8 8)))
+    (= variant 2)
+    (q/fill 100 100 220)
+    )
+  (q/triangle 0 -10 25 0 0  10)
+  (q/fill 30 100 30)
+  (q/ellipse 8 0 8 8))
 
 (defn create-ship
     "Creates a ship entity"
@@ -62,6 +54,12 @@
             (e/add-component ship2 (c/->Position (* (/ center-x 2) 3) (* (/ center-y 2) 3) (+ 3.14 angle)))
             (e/add-component ship1 (c/->Velocity 0 0 0))
             (e/add-component ship2 (c/->Velocity 0 0 0))
+            (e/add-component ship1 (c/->TT false))
+            (e/add-component ship2 (c/->TT false))
+            (e/add-component ship1 (c/->Max_Thrust 2))
+            (e/add-component ship2 (c/->Max_Thrust 2))
+            (e/add-component ship1 (c/->Max_Velocity 3))
+            (e/add-component ship2 (c/->Max_Velocity 3))
             )))
 
 (defn- start
@@ -81,6 +79,8 @@
 
 (defn state-reset []
   (do
+    (reset! ship1-history [])
+    (reset! ship2-history [])
      (-> (e/create-system)
          (start)
          (create-systems)
@@ -106,44 +106,61 @@
    38 :up
    39 :right
    40 :down
+   16 :shift
    32 :space
    13 :enter
    10 :return
    87 :w
    65 :a
    68 :d
-   83 :s})
+   83 :s
+   81 :q})
 
 (defn key-pressed []
   ;; (println (q/key-code))
   (let [ship1 (first (e/get-all-entities-with-component @game-state Ship1))
-        ship2 (first (e/get-all-entities-with-component @game-state Ship2))]
-    (if (not @tt) 
+        ship2 (first (e/get-all-entities-with-component @game-state Ship2))
+        pos1 (e/get-component @game-state ship1 Position)
+        pos2 (e/get-component @game-state ship2 Position)
+        max1 (:max-thrust (e/get-component @game-state ship2 Max_Thrust))
+        max2 (:max-thrust (e/get-component @game-state ship2 Max_Thrust))
+        tt1 (:tt (e/get-component @game-state ship1 TT))
+        tt2 (:tt (e/get-component @game-state ship2 TT))
+        ]
+    (do
+      (if (not tt1)
+        (cond
+         (= (keycodes (q/key-code)) :w)
+         (do 
+           (reset! game-state (e/update-component @game-state ship1 Velocity dynamic-update/add-thrust pos1 max1))
+           (println (e/get-component @game-state ship1 Velocity))
+           )
+         (= (keycodes (q/key-code)) :s)
+         (reset! game-state (e/update-component @game-state ship1 Velocity dynamic-update/add-thrust pos1 (- 0 max1)))
+         (= (keycodes (q/key-code)) :a)
+         (reset! game-state (e/update-component @game-state ship1 Position dynamic-update/rotate -10))
+         (= (keycodes (q/key-code)) :d)
+         (reset! game-state (e/update-component @game-state ship1 Position dynamic-update/rotate 10))))
+      (if (not tt2)
+        (cond
+         (= (keycodes (q/key-code)) :up)
+         (reset! game-state (e/update-component @game-state ship2 Velocity dynamic-update/add-thrust pos2 max2))
+         (= (keycodes (q/key-code)) :down)
+         (reset! game-state (e/update-component @game-state ship2 Velocity dynamic-update/add-thrust pos2 (- 0 max2)))
+         (= (keycodes (q/key-code)) :left)
+         (reset! game-state (e/update-component @game-state ship2 Position dynamic-update/rotate -10))
+         (= (keycodes (q/key-code)) :right)
+         (reset! game-state (e/update-component @game-state ship2 Position dynamic-update/rotate 10))))
       (cond
-       (= (keycodes (q/key-code)) :w)
-       (reset! game-state (e/update-component @game-state ship1 Velocity dynamic-update/go-up))
-       (= (keycodes (q/key-code)) :s)
-       (reset! game-state (e/update-component @game-state ship1 Velocity dynamic-update/go-down))
-       (= (keycodes (q/key-code)) :a)
-       (reset! game-state (e/update-component @game-state ship1 Velocity dynamic-update/go-left))
-       (= (keycodes (q/key-code)) :d)
-       (reset! game-state (e/update-component @game-state ship1 Velocity dynamic-update/go-right))))
-    (if (not @tt)
-      (cond
-       (= (keycodes (q/key-code)) :up)
-       (reset! game-state (e/update-component @game-state ship2 Velocity dynamic-update/go-up))
-       (= (keycodes (q/key-code)) :down)
-       (reset! game-state (e/update-component @game-state ship2 Velocity dynamic-update/go-down))
-       (= (keycodes (q/key-code)) :left)
-       (reset! game-state (e/update-component @game-state ship2 Velocity dynamic-update/go-left))
-       (= (keycodes (q/key-code)) :right)
-       (reset! game-state (e/update-component @game-state ship2 Velocity dynamic-update/go-right)))))
-  (cond
-   (= (keycodes (q/key-code)) :space)  
-   (swap! tt #(not %))
-   (or (= (keycodes (q/key-code)) :return)(= (keycodes (q/key-code)) :enter)) 
-   (do (println "Reset state")
-       (state-reset))))
+       (= (keycodes (q/key-code)) :q)  
+       (do
+         (println (str "tt1 is " (:tt (e/get-component @game-state ship1 TT))))
+         (reset! game-state (e/update-component @game-state ship1 TT #(assoc % :tt (not (:tt %))))))
+       (= (keycodes (q/key-code)) :shift)  
+       (reset! game-state (e/update-component @game-state ship2 TT #(assoc % :tt (not (:tt %)))))
+       (or (= (keycodes (q/key-code)) :return)(= (keycodes (q/key-code)) :enter)) 
+       (do (println "Reset state")
+           (state-reset))))))
 
 (q/defsketch revejs
   :title "A game-like simulation built with Quil, with game-state undo"
