@@ -3,6 +3,11 @@
             [revejs.component :as c :refer [Ship Ship1 Ship2 Position Velocity]]
             ;; [revejs.shot :as s]
             [brute.system :as s]))
+
+(def WIDTH 500)
+(def HEIGHT 500)
+(def speed 1)
+(def gravity 0.001)
 (def game-state (atom 0))
 
 (def game-history (atom [@game-state]))

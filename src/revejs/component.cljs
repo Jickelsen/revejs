@@ -12,5 +12,7 @@
 (defrecord Score1 [score])
 (defrecord Score2 [score])
 (defrecord Score [])
-(defrecord Shot [])
+(defrecord Bullet [])
+(defrecord Bullet1 [])
+(defrecord Bullet2 [])
 (defrecord Renderer [renderer])

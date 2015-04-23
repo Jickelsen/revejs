@@ -1,35 +1,15 @@
 (ns revejs.update
   (:require [quil.core :as q :include-macros true]
-            [revejs.setup :refer [game-state ship1-history ship2-history tt]]
+            [revejs.util :as u]
+            [revejs.setup :refer [game-state ship1-history ship2-history tt WIDTH HEIGHT]]
             [brute.entity :as e]
             [brute.system :as s]
-            [revejs.component :refer [Ship Ship1 Ship2 Position Velocity TT Renderer Max_Thrust Max_Velocity]]
+            [revejs.component :refer [Ship Ship1 Ship2 Position Velocity TT Renderer Max_Thrust Max_Velocity Bullet Bullet1 Bullet2]]
             )
   )
 
-(def speed 1)
-(def gravity 0.001)
 (def char-width 50)
 (def char-height 50)
-(def WIDTH 500)
-(def HEIGHT 500)
-
-(defn add-thrust [velocity position thrust]
-  (let [a-rad (/ (* (:a position) Math/PI) 180)]
-  ;; (let [a-rad (q/radians (:a position))]
-    (-> velocity
-        (assoc :x (+ (:x velocity)  (* thrust (Math/cos a-rad))))
-        (assoc :y (+ (:y velocity)  (* thrust (Math/sin a-rad))))
-        (assoc :a (:a velocity))))
-  )
-
-(defn move [state movable]
-  (e/update-component state movable
-                      Position #(merge-with + % (e/get-component state movable Velocity))))
-
-(defn apply-gravity [state movable]
-  (e/update-component state movable
-                      Velocity (fn [x] (update-in x [:y] #(+ % gravity)))))
 
 (defn bounds [state movable]
   (let [pos (e/get-component state movable Position)
@@ -74,46 +54,13 @@
         )
         ))
 
-
-(defn rotate [position ang-vel]
-  (-> position
-      (assoc :a (+ (:a position) ang-vel)))
-  )
-
-(defn go-up [velocity]
-  (let [{x :x y :y a :a} velocity]
-    ;; (let [{:keys [x y a]} velocity]
-    (-> velocity 
-        (assoc :x x)
-        (assoc :y (- speed))
-        (assoc :a a))))
-(defn go-down [velocity]
-  (let [{x :x y :y a :a} velocity]
-    (-> velocity 
-        (assoc :x x)
-        (assoc :y (+ speed))
-        (assoc :a a))))
-(defn go-left [velocity]
-  (let [{x :x y :y a :a} velocity]
-    (-> velocity 
-        (assoc :x (- speed))
-        (assoc :y y)
-        (assoc :a a)
-    )))
-(defn go-right [velocity]
-  (let [{x :x y :y a :a} velocity]
-    (-> velocity 
-        (assoc :x (+ speed))
-        (assoc :y y)
-        (assoc :a a)
-    )))
-
-(defn update-state [state delta]
+(defn update-state [state _]
   (reduce (fn [sys ship]
+
             (if (not (:tt (e/get-component sys ship TT)))
               (-> sys
-                  (apply-gravity ship)
-                  (move ship)
+                  (u/apply-gravity ship)
+                  (u/move ship)
                   (bounds ship)
                   )
               (if (e/get-component sys ship Ship1)  
@@ -127,7 +74,7 @@
                   ))))
           state (e/get-all-entities-with-component state Ship)))
 
-(defn draw-state [state delta]
+(defn draw-state [state _]
   (do 
     (if (:tt (e/get-component state (first (e/get-all-entities-with-component state Ship1)) TT)) 
       (q/background 155 165 55)
@@ -138,10 +85,16 @@
         (q/push-matrix)
         (q/translate x y)
         (q/rotate (q/radians a) )
-        (if (e/get-component state renderable Ship1)
+        (cond 
+          (e/get-component state renderable Ship1)
           ((:renderer (e/get-component state renderable Renderer)) 1)
+          (e/get-component state renderable Ship2)
           ((:renderer (e/get-component state renderable Renderer)) 2)
-          )
+          (e/get-component state renderable Bullet1)
+          ((:renderer (e/get-component state renderable Renderer)) 1)
+          (e/get-component state renderable Bullet2)
+          ((:renderer (e/get-component state renderable Renderer)) 2)
+          :else ((:renderer (e/get-component state renderable Renderer))))
         (q/pop-matrix)))
     state))
 
