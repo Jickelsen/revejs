@@ -1,15 +1,58 @@
-(ns revejs.update
-  (:require [quil.core :as q :include-macros true]
-            [revejs.util :as u]
-            [revejs.setup :refer [game-state ship1-history ship2-history tt WIDTH HEIGHT]]
+(ns revejs.ship
+(:require [quil.core :as q :include-macros true]
+            [revejs.util :as u :refer [game-state ship1-history ship2-history tt WIDTH HEIGHT]]
             [brute.entity :as e]
             [brute.system :as s]
-            [revejs.component :refer [Ship Ship1 Ship2 Position Velocity TT Renderer Max_Thrust Max_Velocity Bullet Bullet1 Bullet2]]
-            )
-  )
+            [revejs.component :as c :refer [Ship Ship1 Ship2 Position Velocity TT Renderer Max_Thrust Max_Velocity Bullet Bullet1 Bullet2]]
+            ))
 
 (def char-width 50)
 (def char-height 50)
+
+(defn render-ship [variant]
+  (q/fill 50 80 50)
+  (q/rect -2 0 5 14)
+  (cond 
+    (= variant 1)
+    (q/fill 100 220 100)
+    (= variant 2)
+    (q/fill 100 100 220)
+    )
+  (q/triangle 0 -10 25 0 0  10)
+  (q/fill 30 100 30)
+  (q/ellipse 8 0 8 8))
+
+(defn create-ship
+    "Creates a ship entity"
+    [state]
+    (let [ship1 (e/create-entity)
+          ship2 (e/create-entity)
+          center-x (-> WIDTH (/ 2) (Math/floor))
+          center-y (-> HEIGHT (/ 2) (Math/floor))
+          ship-size 20
+          ship-center-x (- center-x (/ 200 2))
+          ship-center-y (- center-y (/ 200 2))
+          angle 0]
+        (-> state
+            (e/add-entity ship1)
+            (e/add-entity ship2)
+            (e/add-component ship1 (c/->Ship))
+            (e/add-component ship2 (c/->Ship))
+            (e/add-component ship1 (c/->Ship1))
+            (e/add-component ship2 (c/->Ship2))
+            (e/add-component ship1 (c/->Renderer render-ship))
+            (e/add-component ship2 (c/->Renderer render-ship))
+            (e/add-component ship1 (c/->Position (/ center-x 2) (/ center-y 2) angle))
+            (e/add-component ship2 (c/->Position (* (/ center-x 2) 3) (* (/ center-y 2) 3) (+ 3.14 angle)))
+            (e/add-component ship1 (c/->Velocity 0 0 0))
+            (e/add-component ship2 (c/->Velocity 0 0 0))
+            (e/add-component ship1 (c/->TT false))
+            (e/add-component ship2 (c/->TT false))
+            (e/add-component ship1 (c/->Max_Thrust 2))
+            (e/add-component ship2 (c/->Max_Thrust 2))
+            (e/add-component ship1 (c/->Max_Velocity 3))
+            (e/add-component ship2 (c/->Max_Velocity 3))
+            )))
 
 (defn bounds [state movable]
   (let [pos (e/get-component state movable Position)
@@ -54,7 +97,7 @@
         )
         ))
 
-(defn update-state [state _]
+(defn game-tick [state _]
   (reduce (fn [sys ship]
 
             (if (not (:tt (e/get-component sys ship TT)))
@@ -73,29 +116,3 @@
                   (e/update-component sys ship TT #(assoc % :tt (not (:tt %))))
                   ))))
           state (e/get-all-entities-with-component state Ship)))
-
-(defn draw-state [state _]
-  (do 
-    (if (:tt (e/get-component state (first (e/get-all-entities-with-component state Ship1)) TT)) 
-      (q/background 155 165 55)
-      (q/background 225 125 75))
-    (doseq [renderable (e/get-all-entities-with-component state Renderer)]
-      (let [{x :x y :y a :a} (e/get-component state renderable Position)]
-        (q/ellipse 20 20 20 20)
-        (q/push-matrix)
-        (q/translate x y)
-        (q/rotate (q/radians a) )
-        (cond 
-          (e/get-component state renderable Ship1)
-          ((:renderer (e/get-component state renderable Renderer)) 1)
-          (e/get-component state renderable Ship2)
-          ((:renderer (e/get-component state renderable Renderer)) 2)
-          (e/get-component state renderable Bullet1)
-          ((:renderer (e/get-component state renderable Renderer)) 1)
-          (e/get-component state renderable Bullet2)
-          ((:renderer (e/get-component state renderable Renderer)) 2)
-          :else ((:renderer (e/get-component state renderable Renderer))))
-        (q/pop-matrix)))
-    state))
-
-

@@ -1,20 +1,53 @@
 (ns revejs.setup
-  (:require [brute.entity :as e]
+  (:require [quil.core :as q :include-macros true]
+   [brute.entity :as e]
+            [revejs.draw :as draw]
+            [revejs.ship :as ship]
+            [revejs.bullet :as bullet]
+            [revejs.util :as u :refer [game-state ship1-history ship2-history tt WIDTH HEIGHT]]
             [revejs.component :as c :refer [Ship Ship1 Ship2 Position Velocity]]
             ;; [revejs.shot :as s]
             [brute.system :as s]))
 
-(def WIDTH 500)
-(def HEIGHT 500)
-(def speed 1)
-(def gravity 0.001)
-(def game-state (atom 0))
+(enable-console-print!)
 
-(def game-history (atom [@game-state]))
-(def ship1-history (atom []))
-(def ship2-history (atom []))
+(def FRAMERATE 60)
+(defn- start
+    "Create all the initial entities with their components"
+    [system]
+    (ship/create-ship system)
+    )
 
-(def tt (atom false))
+(defn setup-game-loop
+    "register all the system functions"
+    [system]
+    (-> system
+        (s/add-system-fn ship/game-tick)
+        (s/add-system-fn bullet/game-tick)
+        (s/add-system-fn draw/draw-state)
+    ))
+
+(defn state-reset []
+  (do
+    (reset! ship1-history [])
+    (reset! ship2-history [])
+     (-> (e/create-system)
+         (start)
+         (setup-game-loop)
+         (as-> s (reset! game-state s)))))
+
+(defn game-loop []
+  (do
+     ;; (q/background 155 165 55)
+     (reset! game-state (s/process-one-game-tick @game-state (/ 1000 FRAMERATE)))
+     ))
+
+(defn setup []
+  (do
+    (println "Started")
+    (state-reset)
+    (q/rect-mode :center)
+    (q/frame-rate FRAMERATE)))
 
 (add-watch game-state :history
   (fn [_ _ _ n]

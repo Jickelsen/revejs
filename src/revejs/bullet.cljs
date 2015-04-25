@@ -1,7 +1,6 @@
 (ns revejs.bullet
   (:require [quil.core :as q :include-macros true]
-            [revejs.util :as u]
-            [revejs.setup :refer [game-state ship1-history ship2-history tt WIDTH HEIGHT]]
+            [revejs.util :as u :refer [game-state ship1-history ship2-history tt WIDTH HEIGHT]]
             [brute.entity :as e]
             [brute.system :as s]
             [revejs.component :as c :refer [Ship Ship1 Ship2 Position Velocity TT Renderer Max_Thrust Max_Velocity Bullet Bullet1 Bullet2]]
@@ -66,7 +65,7 @@
       (<= (:y pos) 0)
       (e/kill-entity movable))))
 
-(defn process-one-game-tick [state _]
+(defn game-tick [state _]
   (reduce (fn [sys bullet]
             (-> sys
                 (u/move bullet)
