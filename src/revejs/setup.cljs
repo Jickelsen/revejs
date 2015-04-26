@@ -38,7 +38,6 @@
 
 (defn game-loop []
   (do
-     ;; (q/background 155 165 55)
      (reset! game-state (s/process-one-game-tick @game-state (/ 1000 FRAMERATE)))
      ))
 

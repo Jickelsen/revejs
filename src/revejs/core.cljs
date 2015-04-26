@@ -1,7 +1,7 @@
 (ns revejs.core
   (:require [quil.core :as q :include-macros true]
             [revejs.input :as input]
-            [revejs.setup :as setup ]
+            [revejs.setup :as setup]
             [revejs.util :refer [WIDTH HEIGHT]]
             [figwheel.client :as fw]
             )

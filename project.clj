@@ -9,11 +9,14 @@
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [quil "2.2.5"]
                  [brute "0.3.0"]
-                 [figwheel "0.2.5-SNAPSHOT"]
+                 [figwheel "0.2.6"]
+                 [figwheel-sidecar "0.2.6"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
 
   :plugins [[lein-cljsbuild "1.0.4"]
-            [lein-figwheel "0.2.5-SNAPSHOT"]]
+            [lein-figwheel "0.2.6"]
+            [cider/cider-nrepl "0.9.0-SNAPSHOT"]
+            [refactor-nrepl "1.0.1"]]
 
   :source-paths ["src"]
   :clean-targets ^{:protect false} ["resources/public/js/compiled"]
@@ -45,7 +48,7 @@
              :css-dirs ["resources/public/css"] ;; watch and update CSS
 
              ;; Start an nREPL server into the running figwheel process
-             ;; :nrepl-port 7888
+             :nrepl-port 7888
 
              ;; Server Ring Handler (optional)
              ;; if you want to embed a ring handler into the figwheel http-kit
