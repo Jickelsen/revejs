@@ -5,21 +5,21 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2850"]
-                 [org.clojure/math.numeric-tower "0.0.4"]
+                 [org.clojure/clojurescript "0.0-3211"]
                  [quil "2.2.5"]
                  [brute "0.3.0"]
                  [figwheel "0.2.6"]
                  [figwheel-sidecar "0.2.6"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
 
-  :plugins [[lein-cljsbuild "1.0.4"]
-            [lein-figwheel "0.2.6"]
+  :plugins [[lein-cljsbuild "1.0.5" ]
+            [lein-figwheel "0.2.6" :exclusions [org.clojure/clojure]]
             [cider/cider-nrepl "0.9.0-SNAPSHOT"]
-            [refactor-nrepl "1.0.1"]]
+            [refactor-nrepl "1.0.4"]]
 
-  :source-paths ["src"]
+  :source-paths ["src/clj"]
   :clean-targets ^{:protect false} ["resources/public/js/compiled"]
+  :global-vars {*print-length* 100}
   
   :prep-tasks [["cljx" "once"] "javac" "compile"]
   :profiles {:dev {:plugins [[com.keminglabs/cljx "0.6.0"]]}}
@@ -31,7 +31,7 @@
                    :rules :cljs}]}
   :cljsbuild {
     :builds [{:id "dev"
-              :source-paths ["src" "dev_src" "target/generated-cljs"]
+              :source-paths ["src/cljs" "dev_src" "target/generated-cljs"]
               :compiler {:output-to "resources/public/js/compiled/revejs.js"
                          :output-dir "resources/public/js/compiled/out"
                          :optimizations :none

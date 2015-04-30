@@ -45,7 +45,7 @@
          (= (keycodes (q/key-code)) :w)
          (do 
            (reset! game-state (e/update-component @game-state ship1 Velocity u/add-thrust pos1 max1))
-           ;; (println (e/get-component @game-state ship1 Velocity))
+           (println (e/get-component @game-state ship1 Velocity))
            )
          (= (keycodes (q/key-code)) :s)
          (reset! game-state (e/update-component @game-state ship1 Velocity u/add-thrust pos1 (- 0 max1)))
