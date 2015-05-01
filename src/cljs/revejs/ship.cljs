@@ -4,13 +4,13 @@
           [revejs.util :as u :refer [WIDTH HEIGHT]]
           [brute.entity :as e]
           [brute.system :as s]
-          [revejs.component :as c :refer [Ship Ship1 Ship2 Position Velocity TT Renderer Max_Thrust Max_Velocity Bullet Bullet1 Bullet2]]
+          [revejs.component :as c :refer [Ship Ship1 Ship2 Transform Velocity TT Renderer Max_Thrust Max_Velocity Bullet Bullet1 Bullet2]]
             ))
 
-(def char-width 50)
-(def char-height 50)
+(def char-width 20)
+(def char-height 20)
 
-(defn render-ship [variant]
+(defn render-ship [w h variant]
   (q/fill 50 80 50)
   (q/rect -2 0 5 14)
   (cond 
@@ -43,8 +43,8 @@
             (e/add-component ship2 (c/->Ship2))
             (e/add-component ship1 (c/->Renderer render-ship))
             (e/add-component ship2 (c/->Renderer render-ship))
-            (e/add-component ship1 (c/->Position (/ center-x 2) (/ center-y 2) angle))
-            (e/add-component ship2 (c/->Position (* (/ center-x 2) 3) (* (/ center-y 2) 3) (+ 3.14 angle)))
+            (e/add-component ship1 (c/->Transform (/ center-x 2) (/ center-y 2) angle char-width char-height))
+            (e/add-component ship2 (c/->Transform (* (/ center-x 2) 3) (* (/ center-y 2) 3) (+ 180 angle) char-width char-height))
             (e/add-component ship1 (c/->Velocity 0 0 0))
             (e/add-component ship2 (c/->Velocity 0 0 0))
             (e/add-component ship1 (c/->TT false))
@@ -56,7 +56,7 @@
             )))
 
 (defn bounds [state movable]
-  (let [pos (e/get-component state movable Position)
+  (let [pos (e/get-component state movable Transform)
         vel (e/get-component state movable Velocity)
         abs-vel (Math/sqrt (Math/pow (:x vel) 2) (Math/pow (:y vel) 2))
         ;; max-vel (add-thrust vel pos (e/get-component state movable (:max-velocity Max_Velocity)))
@@ -83,7 +83,7 @@
                                                           (:y %)))))
                                           (assoc :a (:a %))))
         (e/update-component movable
-                            Position #(-> %
+                            Transform #(-> %
                                           (assoc :x (if (>= (:x pos) WIDTH)
                                                       WIDTH
                                                       (if (<= (:x pos) 0)

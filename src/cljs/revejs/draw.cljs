@@ -3,7 +3,7 @@
             [revejs.util :as u :refer [WIDTH HEIGHT]]
             [brute.entity :as e]
             [brute.system :as s]
-            [revejs.component :refer [Ship Ship1 Ship2 Position Velocity TT Renderer Max_Thrust Max_Velocity Bullet Bullet1 Bullet2]]
+            [revejs.component :refer [Ship Ship1 Ship2 Transform Velocity TT Renderer Max_Thrust Max_Velocity Bullet Bullet1 Bullet2]]
             )
   )
 
@@ -13,19 +13,19 @@
       (q/background 155 165 55)
       (q/background 225 125 75))
     (doseq [renderable (e/get-all-entities-with-component state Renderer)]
-      (let [{x :x y :y a :a} (e/get-component state renderable Position)]
+      (let [{x :x y :y a :a w :w h :h} (e/get-component state renderable Transform)]
         (q/push-matrix)
         (q/translate x y)
         (q/rotate (q/radians a) )
         (cond 
           (e/get-component state renderable Ship1)
-          ((:renderer (e/get-component state renderable Renderer)) 1)
+          ((:renderer (e/get-component state renderable Renderer)) w h 1)
           (e/get-component state renderable Ship2)
-          ((:renderer (e/get-component state renderable Renderer)) 2)
+          ((:renderer (e/get-component state renderable Renderer)) w h 2)
           (e/get-component state renderable Bullet1)
-          ((:renderer (e/get-component state renderable Renderer)) 1)
+          ((:renderer (e/get-component state renderable Renderer)) w h 1)
           (e/get-component state renderable Bullet2)
-          ((:renderer (e/get-component state renderable Renderer)) 2)
+          ((:renderer (e/get-component state renderable Renderer)) w h 2)
           :else ((:renderer (e/get-component state renderable Renderer))))
         (q/pop-matrix)))
     state))

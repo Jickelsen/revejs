@@ -1,6 +1,6 @@
 (ns revejs.component)
 
-(defrecord Position [x y a])
+(defrecord Transform [x y a w h])
 (defrecord Velocity [x y a])
 (defrecord Max_Thrust [max-thrust])
 (defrecord Max_Velocity [max-velocity])

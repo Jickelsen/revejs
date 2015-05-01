@@ -2,13 +2,13 @@
   (:require [quil.core :as q :include-macros true]
             [brute.entity :as e]
             [brute.system :as s]
-            [revejs.component :refer [Ship Ship1 Ship2 Position Velocity TT Renderer Max_Thrust Max_Velocity]]
+            [revejs.component :refer [Ship Ship1 Ship2 Transform Velocity TT Renderer Max_Thrust Max_Velocity]]
             ))
 
 (def WIDTH 500)
 (def HEIGHT 500)
 (def speed 1)
-(def gravity 0.001)
+(def gravity 0.00)
 
 (def FRAMERATE 60)
 
@@ -56,9 +56,19 @@
 
 (defn move [state movable]
   (e/update-component state movable
-                      Position #(merge-with + % (e/get-component state movable Velocity))))
+                      Transform #(merge-with + % (e/get-component state movable Velocity))))
 
 (defn apply-gravity [state movable]
   (e/update-component state movable
                       Velocity (fn [x] (update-in x [:y] #(+ % gravity)))))
 
+;; http://codeofrob.com/entries/learn-functional-programming-with-me---adding-collision-detection-to-the-game.html
+(defn rect-right [rect] (+ (:x rect) (:w rect)))
+(defn rect-bottom [rect] (+ (:y rect) (:h rect)))
+
+(defn collides-with [one two]
+    (cond (< (rect-right one) (:x two)) false
+          (> (:x one) (rect-right two)) false
+          (< (rect-bottom one) (:y two)) false
+          (> (:y one) (rect-bottom two)) false
+          :else true))
