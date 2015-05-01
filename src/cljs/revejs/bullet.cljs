@@ -4,12 +4,14 @@
             [revejs.util :as u :refer [WIDTH HEIGHT]]
             [brute.entity :as e]
             [brute.system :as s]
-            [revejs.component :as c :refer [Ship Ship1 Ship2 Transform Velocity TT Renderer Max_Thrust Max_Velocity Bullet Bullet1 Bullet2]]
+            [cljs-time.core :as t]
+        [revejs.component :as c :refer [Ship Ship1 Ship2 Transform Velocity TT Renderer Max_Thrust Max_Velocity Cannon Bullet Bullet1 Bullet2]]
             ))
 
 (def width 6)
 (def height 6)
 (def speed 2)
+(def life-time 3000)
 
 (defn render-bullet [w h variant]
   (q/fill 30 30 30)
@@ -41,15 +43,25 @@
                      (e/get-component state entity Ship2)
                      (c/->Bullet2)
                      )
+        {fire-timestamp :fire-timestamp fire-delay :fire-delay} (e/get-component state entity Cannon)
         ]
-    (-> state
-        (e/add-entity bullet)
-        (e/add-component bullet (c/->Bullet))
-        (e/add-component bullet allegiance)
-        (e/add-component bullet (c/->Renderer render-bullet))
-        (e/add-component bullet (c/->Transform pos-x pos-y (:a entity-pos) size-x size-y))
-        (e/add-component bullet (u/add-thrust (c/->Velocity vel-x vel-y 0) entity-pos speed))
-        )))
+    (if (>= (t/in-millis (t/interval fire-timestamp (t/now))) fire-delay)
+      (-> state
+          (e/add-entity bullet)
+          (e/add-component bullet (c/->Bullet (t/now) life-time))
+          (e/add-component bullet allegiance)
+          (e/add-component bullet (c/->Renderer render-bullet))
+          (e/add-component bullet (c/->Transform pos-x pos-y (:a entity-pos) size-x size-y))
+          (e/add-component bullet (u/add-thrust (c/->Velocity vel-x vel-y 0) entity-pos speed))
+          (e/add-component entity (c/->Cannon (t/now) fire-delay))
+          )
+      state)))
+
+(defn life-cycle [state bullet]
+  (let [{life-timestamp :life-timestamp life-time :life-time} (e/get-component state bullet Bullet)]
+    (if (> (t/in-millis (t/interval life-timestamp (t/now))) life-time)
+      (e/kill-entity state bullet)
+      state)))
 
 (defn bounds [state movable]
   (let [pos (e/get-component state movable Transform)
@@ -79,6 +91,7 @@
 (defn game-tick [state _]
   (reduce (fn [sys bullet]
             (-> sys
+                (life-cycle bullet)
                 (u/move bullet)
                 (bounds bullet)
                 (collide bullet)

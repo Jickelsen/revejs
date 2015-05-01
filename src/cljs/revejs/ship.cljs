@@ -4,11 +4,13 @@
           [revejs.util :as u :refer [WIDTH HEIGHT]]
           [brute.entity :as e]
           [brute.system :as s]
-          [revejs.component :as c :refer [Ship Ship1 Ship2 Transform Velocity TT Renderer Max_Thrust Max_Velocity Bullet Bullet1 Bullet2]]
+          [cljs-time.core :as t]
+          [revejs.component :as c :refer [Ship Ship1 Ship2 Transform Velocity TT Renderer Max_Thrust Max_Velocity Cannon Bullet Bullet1 Bullet2]]
             ))
 
 (def char-width 20)
 (def char-height 20)
+(def fire-delay 250)
 
 (defn render-ship [w h variant]
   (q/fill 50 80 50)
@@ -47,6 +49,8 @@
             (e/add-component ship2 (c/->Transform (* (/ center-x 2) 3) (* (/ center-y 2) 3) (+ 180 angle) char-width char-height))
             (e/add-component ship1 (c/->Velocity 0 0 0))
             (e/add-component ship2 (c/->Velocity 0 0 0))
+            (e/add-component ship1 (c/->Cannon (t/now) fire-delay))
+            (e/add-component ship2 (c/->Cannon (t/now) fire-delay))
             (e/add-component ship1 (c/->TT false))
             (e/add-component ship2 (c/->TT false))
             (e/add-component ship1 (c/->Max_Thrust 2))
