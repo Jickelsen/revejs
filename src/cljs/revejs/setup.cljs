@@ -1,10 +1,11 @@
 (ns revejs.setup
   (:require [quil.core :as q :include-macros true]
-   [brute.entity :as e]
+            [brute.entity :as e]
+            [revejs.state :refer [game-state ship1-history ship2-history tt ]]
             [revejs.draw :as draw]
             [revejs.ship :as ship]
             [revejs.bullet :as bullet]
-            [revejs.util :as u :refer [game-state ship1-history ship2-history tt WIDTH HEIGHT]]
+            [revejs.util :as u :refer [WIDTH HEIGHT]]
             [revejs.component :as c :refer [Ship Ship1 Ship2 Position Velocity]]
             ;; [revejs.shot :as s]
             [brute.system :as s]))

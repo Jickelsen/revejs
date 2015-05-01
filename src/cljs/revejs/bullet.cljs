@@ -1,6 +1,7 @@
 (ns revejs.bullet
   (:require [quil.core :as q :include-macros true]
-            [revejs.util :as u :refer [game-state ship1-history ship2-history tt WIDTH HEIGHT]]
+            [revejs.state :refer [game-state ship1-history ship2-history tt ]]
+            [revejs.util :as u :refer [WIDTH HEIGHT]]
             [brute.entity :as e]
             [brute.system :as s]
             [revejs.component :as c :refer [Ship Ship1 Ship2 Position Velocity TT Renderer Max_Thrust Max_Velocity Bullet Bullet1 Bullet2]]

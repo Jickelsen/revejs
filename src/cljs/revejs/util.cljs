@@ -9,13 +9,6 @@
 (def HEIGHT 500)
 (def speed 1)
 (def gravity 0.001)
-(def game-state (atom 0))
-
-(def game-history (atom [@game-state]))
-(def ship1-history (atom []))
-(def ship2-history (atom []))
-
-(def tt (atom false))
 
 (def FRAMERATE 60)
 
