@@ -1,5 +1,5 @@
 (ns revejs.draw (:require [quil.core :as q :include-macros true]
-            [revejs.state :refer [game-state ship1-history ship2-history tt]]
+            [revejs.state :refer [game-state ship1-history ship2-history]]
             [revejs.util :as u :refer [WIDTH HEIGHT]]
             [brute.entity :as e]
             [brute.system :as s]

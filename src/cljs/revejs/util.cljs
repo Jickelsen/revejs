@@ -12,9 +12,14 @@
 
 (def FRAMERATE 60)
 
-(defn rotate [position ang-vel]
+(defn rotate [position ang-delta]
   (-> position
-      (assoc :a (+ (:a position) ang-vel)))
+      (assoc :a (+ (:a position) ang-delta)))
+  )
+
+(defn spin [velocity ang-vel]
+  (-> velocity
+      (assoc :a ang-vel))
   )
 
 (defn go-up [velocity]
@@ -51,8 +56,16 @@
     (-> velocity
         (assoc :x (+ (:x velocity)  (* thrust (Math/cos a-rad))))
         (assoc :y (+ (:y velocity)  (* thrust (Math/sin a-rad))))
-        (assoc :a (:a velocity))))
+        ))
   )
+
+(defn set-speed [velocity position speed]
+  (let [a-rad (/ (* (:a position) Math/PI) 180)]
+    (-> velocity
+        (assoc :x (* speed (Math/cos a-rad)))
+        (assoc :y (* speed (Math/sin a-rad)))
+        )
+    ))
 
 (defn move [state movable]
   (e/update-component state movable

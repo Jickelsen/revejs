@@ -1,7 +1,7 @@
 (ns revejs.setup
   (:require [quil.core :as q :include-macros true]
             [brute.entity :as e]
-            [revejs.state :refer [game-state ship1-history ship2-history tt ]]
+            [revejs.state :refer [game-state ship1-history ship2-history]]
             [revejs.draw :as draw]
             [revejs.ship :as ship]
             [revejs.bullet :as bullet]
@@ -55,8 +55,10 @@
         ship2 (first (e/get-all-entities-with-component n Ship2))
         pos1 (e/get-component n ship1 Transform)
         pos2 (e/get-component n ship2 Transform)
+        vel1 (e/get-component n ship1 Velocity)
+        vel2 (e/get-component n ship2 Velocity)
         ]
-     (when-not (= (last @ship1-history) pos1)
-       (swap! ship1-history conj pos1))
-     (when-not (= (last @ship2-history) pos2)
-       (swap! ship2-history conj pos2))))) 
+     (when-not (= (:pos  (last @ship1-history)) pos1)
+       (swap! ship1-history conj {:pos pos1 :vel vel1}))
+     (when-not (= (:pos  (last @ship2-history)) pos2)
+       (swap! ship2-history conj {:pos pos2 :vel vel2}))))) 

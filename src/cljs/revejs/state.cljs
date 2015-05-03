@@ -4,5 +4,3 @@
 
 (def ship1-history (atom []))
 (def ship2-history (atom []))
-
-(def tt (atom false))

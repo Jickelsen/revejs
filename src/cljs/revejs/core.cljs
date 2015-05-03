@@ -14,6 +14,7 @@
   :setup setup/setup 
   :draw setup/game-loop
   :key-pressed input/key-pressed
+  :key-released input/key-released
   )
 
 (fw/start
