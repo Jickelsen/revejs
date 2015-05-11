@@ -7,7 +7,7 @@
             [revejs.setup :as setup]
             [revejs.bullet :as bullet]
             [brute.entity :as e]
-            [revejs.component :as c :refer [Ship Ship1 Ship2 Transform Velocity TT Renderer Max_Thrust Max_Velocity]]
+            [revejs.component :as c :refer [Ship Ship1 Ship2 Transform Velocity TT Engine Renderer Max_Thrust Max_Velocity]]
             [brute.system :as s]
             ))
 
@@ -38,6 +38,8 @@
         ship2 (first (e/get-all-entities-with-component @game-state Ship2))
         pos1 (e/get-component @game-state ship1 Transform)
         pos2 (e/get-component @game-state ship2 Transform)
+        eng1 (e/get-component @game-state ship1 Engine)
+        eng2 (e/get-component @game-state ship2 Engine)
         max1 (:max-thrust (e/get-component @game-state ship2 Max_Thrust))
         max2 (:max-thrust (e/get-component @game-state ship2 Max_Thrust))
         tt1 (:tt (e/get-component @game-state ship1 TT))
@@ -48,30 +50,31 @@
         (cond
          (= (keycodes (q/key-code)) :w)
          (do 
-           (reset! game-state (e/update-component @game-state ship1 Velocity u/add-thrust pos1 max1))
+           (swap! game-state #(e/add-component % ship1 (assoc eng1 :throttle 1)))
            ;; (println (e/get-component @game-state ship1 Transform))
            )
          (= (keycodes (q/key-code)) :s)
-         (reset! game-state (e/update-component @game-state ship1 Velocity u/add-thrust pos1 (- 0 max1)))
+         (swap! game-state #(e/add-component % ship1 (assoc eng1 :throttle -1)))
+         ;; (reset! game-state (e/update-component @game-state ship1 Velocity u/add-thrust pos1 (- 0 max1)))
          (= (keycodes (q/key-code)) :a)
          (reset! game-state (e/update-component @game-state ship1 Velocity u/spin -3))
          (= (keycodes (q/key-code)) :d)
          (reset! game-state (e/update-component @game-state ship1 Velocity u/spin 3))
          (= (keycodes (q/key-code)) :c)
-         (swap! game-state #(bullet/fire % ship1))
+         (swap! game-state #(bullet/start-firing % ship1))
          ))
       (if (not tt2)
         (cond
          (= (keycodes (q/key-code)) :up)
-         (reset! game-state (e/update-component @game-state ship2 Velocity u/add-thrust pos2 max2))
+         (swap! game-state #(e/add-component % ship2 (assoc eng2 :throttle 1)))
          (= (keycodes (q/key-code)) :down)
-         (reset! game-state (e/update-component @game-state ship2 Velocity u/add-thrust pos2 (- 0 max2)))
+         (swap! game-state #(e/add-component % ship2 (assoc eng2 :throttle -1)))
          (= (keycodes (q/key-code)) :left)
          (reset! game-state (e/update-component @game-state ship2 Velocity u/spin -3))
          (= (keycodes (q/key-code)) :right)
          (reset! game-state (e/update-component @game-state ship2 Velocity u/spin 3))
          (= (keycodes (q/key-code)) :.)
-         (swap! game-state #(bullet/fire % ship2))
+         (swap! game-state #(bullet/start-firing % ship2))
          ))
       (cond
        (= (keycodes (q/key-code)) :q)  
@@ -90,6 +93,8 @@
         ship2 (first (e/get-all-entities-with-component @game-state Ship2))
         pos1 (e/get-component @game-state ship1 Transform)
         pos2 (e/get-component @game-state ship2 Transform)
+        eng1 (e/get-component @game-state ship1 Engine)
+        eng2 (e/get-component @game-state ship2 Engine)
         max1 (:max-thrust (e/get-component @game-state ship2 Max_Thrust))
         max2 (:max-thrust (e/get-component @game-state ship2 Max_Thrust))
         tt1 (:tt (e/get-component @game-state ship1 TT))
@@ -98,13 +103,25 @@
     (do
       (if (not tt1)
         (cond
+         (= (keycodes (q/key-code)) :w)
+         (swap! game-state #(e/add-component % ship1 (assoc eng1 :throttle 0)))
+         (= (keycodes (q/key-code)) :s)
+         (swap! game-state #(e/add-component % ship1 (assoc eng1 :throttle 0)))
          (= (keycodes (q/key-code)) :a)
          (reset! game-state (e/update-component @game-state ship1 Velocity u/spin 0))
          (= (keycodes (q/key-code)) :d)
          (reset! game-state (e/update-component @game-state ship1 Velocity u/spin 0))
+         (= (keycodes (q/key-code)) :c)
+         (swap! game-state #(bullet/stop-firing % ship1))
+         (= (keycodes (q/key-code)) :.)
+         (swap! game-state #(bullet/stop-firing % ship2))
          ))
       (if (not tt2)
         (cond
+         (= (keycodes (q/key-code)) :up)
+         (swap! game-state #(e/add-component % ship2 (assoc eng2 :throttle 0)))
+         (= (keycodes (q/key-code)) :down)
+         (swap! game-state #(e/add-component % ship2 (assoc eng2 :throttle 0)))
          (= (keycodes (q/key-code)) :left)
          (reset! game-state (e/update-component @game-state ship2 Velocity u/spin 0))
          (= (keycodes (q/key-code)) :right)

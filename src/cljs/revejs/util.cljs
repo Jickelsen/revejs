@@ -67,7 +67,16 @@
         )
     ))
 
+(defn clamp-velocity [velocity max-abs-vel]
+  (let [a-rad (q/atan2 (:y velocity) (:x velocity))]
+    (-> velocity
+        (assoc :x (* max-abs-vel (Math/cos a-rad)))
+        (assoc :y (* max-abs-vel (Math/sin a-rad)))
+        )
+    ))
+
 (defn move [state movable]
+  ;; (let [null (println (e/get-component state movable Velocity))])
   (e/update-component state movable
                       Transform #(merge-with + % (e/get-component state movable Velocity))))
 

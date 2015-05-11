@@ -10,7 +10,7 @@
 
 (def width 6)
 (def height 6)
-(def speed 2)
+(def speed 3)
 (def life-time 3000)
 
 (defn render-bullet [w h variant]
@@ -43,9 +43,10 @@
                      (e/get-component state entity Ship2)
                      (c/->Bullet2)
                      )
-        {fire-timestamp :fire-timestamp fire-delay :fire-delay} (e/get-component state entity Cannon)
+        cannon (e/get-component state entity Cannon)
+        {firing? :firing fire-timestamp :fire-timestamp fire-delay :fire-delay} cannon  
         ]
-    (if (>= (t/in-millis (t/interval fire-timestamp (t/now))) fire-delay)
+    (if (and firing? (>= (t/in-millis (t/interval fire-timestamp (t/now))) fire-delay))
       (-> state
           (e/add-entity bullet)
           (e/add-component bullet (c/->Bullet (t/now) life-time))
@@ -53,7 +54,7 @@
           (e/add-component bullet (c/->Renderer render-bullet))
           (e/add-component bullet (c/->Transform pos-x pos-y (:a entity-pos) size-x size-y))
           (e/add-component bullet (u/add-thrust (c/->Velocity vel-x vel-y 0) entity-pos speed))
-          (e/add-component entity (c/->Cannon (t/now) fire-delay))
+          (e/add-component entity (c/->Cannon firing? (t/now) fire-delay))
           )
       state)))
 
@@ -81,16 +82,31 @@
       (e/kill-entity movable))))
 
 (defn collide [state bullet]
-  (reduce (fn [sys ship]
+  (reduce (fn [st ship]
             (if
-              (u/collides-with (e/get-component sys bullet Transform) (e/get-component sys ship Transform))
-              (e/kill-entity sys bullet)
-              sys))
+              (u/collides-with (e/get-component st bullet Transform) (e/get-component st ship Transform))
+              (e/kill-entity st bullet)
+              st))
           state (e/get-all-entities-with-component state Ship)))
 
-(defn game-tick [state _]
-  (reduce (fn [sys bullet]
-            (-> sys
+(defn start-firing [state entity]
+  (let [cannon (e/get-component state entity Cannon)]
+    (e/add-component state entity (assoc cannon :firing true) )))
+
+(defn stop-firing [state entity]
+  (let [cannon (e/get-component state entity Cannon)]
+    (e/add-component state entity (assoc cannon :firing false) )))
+
+(defn- handle-firing [state]
+  (reduce (fn [st cannon]
+            (-> st
+                (fire cannon))
+            )
+          state (e/get-all-entities-with-component state Cannon)))
+
+(defn- handle-bullets [state]
+  (reduce (fn [st bullet]
+            (-> st 
                 (life-cycle bullet)
                 (u/move bullet)
                 (bounds bullet)
@@ -98,3 +114,10 @@
                 )
             )
           state (e/get-all-entities-with-component state Bullet)))
+
+(defn game-tick [state _]
+  (-> state
+      (handle-bullets)
+      (handle-firing)
+      ))
+  

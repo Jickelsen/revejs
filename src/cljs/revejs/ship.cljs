@@ -5,12 +5,12 @@
           [brute.entity :as e]
           [brute.system :as s]
           [cljs-time.core :as t]
-          [revejs.component :as c :refer [Ship Ship1 Ship2 Transform Velocity TT Renderer Max_Thrust Max_Velocity Cannon Bullet Bullet1 Bullet2]]
+          [revejs.component :as c :refer [Ship Ship1 Ship2 Transform Velocity TT Renderer Max_Thrust Max_Velocity Engine Cannon Bullet Bullet1 Bullet2]]
             ))
 
 (def char-width 20)
 (def char-height 20)
-(def fire-delay 250)
+(def fire-delay 500)
 
 (defn render-ship [w h variant]
   (q/fill 50 80 50)
@@ -49,8 +49,10 @@
             (e/add-component ship2 (c/->Transform (* (/ center-x 2) 3) (* (/ center-y 2) 3) (+ 180 angle) char-width char-height))
             (e/add-component ship1 (c/->Velocity 0 0 0))
             (e/add-component ship2 (c/->Velocity 0 0 0))
-            (e/add-component ship1 (c/->Cannon (t/now) fire-delay))
-            (e/add-component ship2 (c/->Cannon (t/now) fire-delay))
+            (e/add-component ship1 (c/->Engine 0 0.1 2))
+            (e/add-component ship2 (c/->Engine 0 0.1 2))
+            (e/add-component ship1 (c/->Cannon false (t/now) fire-delay))
+            (e/add-component ship2 (c/->Cannon false (t/now) fire-delay))
             (e/add-component ship1 (c/->TT false))
             (e/add-component ship2 (c/->TT false))
             (e/add-component ship1 (c/->Max_Thrust 2))
@@ -59,36 +61,13 @@
             (e/add-component ship2 (c/->Max_Velocity 3))
             )))
 
-(defn speed-limit [state movable]
-  (let [pos (e/get-component state movable Transform)
-        vel (e/get-component state movable Velocity)
-        abs-vel (Math/sqrt (Math/pow (:x vel) 2) (Math/pow (:y vel) 2))
-        max-vel-component (u/set-speed vel pos (e/get-component state movable (:max-velocity Max_Velocity)))
-        abs-max-vel (:max-velocity (e/get-component state movable Max_Velocity)) 
-        max-thrust (:max-thrust (e/get-component state movable Max_Thrust)) 
-        ;; null (println max-vel)
-        ]
-    (-> state
-        (e/update-component movable
-                Velocity #(-> %
-                              (assoc :y
-                                     (if (< abs-max-vel abs-vel)
-                                       (:y max-vel-component)
-                                       (:y %)))
-                              (assoc :x
-                                     (if (< abs-max-vel abs-vel)
-                                       (:x max-vel-component)
-                                       (:x %)))
-                                (assoc :a (:a %))))
-        )))
 (defn bounds [state movable]
   (let [pos (e/get-component state movable Transform)
         vel (e/get-component state movable Velocity)
         abs-vel (Math/sqrt (Math/pow (:x vel) 2) (Math/pow (:y vel) 2))
-        max-vel-component (u/set-speed vel pos (e/get-component state movable (:max-velocity Max_Velocity)))
+        max-vel-component (u/set-speed vel pos (:max-velocity (e/get-component state movable Max_Velocity)))
         abs-max-vel (:max-velocity (e/get-component state movable Max_Velocity)) 
         max-thrust (:max-thrust (e/get-component state movable Max_Thrust)) 
-        ;; null (println max-vel)
         ]
     (-> state
         (e/update-component movable
@@ -97,16 +76,12 @@
                                             0
                                             (if (<= (:y pos) 0)
                                             0
-                                            (if (< abs-max-vel abs-vel)
-                                              (:y max-vel-component)
-                                              (:y %)))))
+                                            (:y %))))
                                 (assoc :x (if (>= (:x pos) WIDTH)
                                             0
                                             (if (<= (:x pos) 0)
                                             0
-                                            (if (< abs-max-vel abs-vel)
-                                              (:x max-vel-component)
-                                              (:x %)))))
+                                            (:x %))))
                                 (assoc :a (:a %))))
         (e/update-component movable
                 Transform #(-> %
@@ -121,15 +96,30 @@
                                             0
                                             (:y %))))
                                 (assoc :a (:a %))))
-        )
-        ))
+        )))
+
+(defn update-vals [map vals f]
+  (reduce #(update-in %1 [%2] f) map vals))
+
+(defn run-engine [state ship]
+  (let [pos (e/get-component state ship Transform)
+        vel (e/get-component state ship Velocity)
+        {throttle :throttle thrust :thrust max-velocity :max-velocity} (e/get-component state ship Engine)
+        new-vel-component (u/add-thrust vel pos (* throttle thrust))
+        new-abs-vel (Math/sqrt (+ (Math/pow (:x new-vel-component) 2) (Math/pow (:y new-vel-component) 2)))
+        max-vel-component (u/clamp-velocity new-vel-component max-velocity)
+        ;; null (println new-abs-vel)
+        ]
+    (if (<= new-abs-vel max-velocity)
+      (e/add-component state ship new-vel-component)
+      (e/add-component state ship max-vel-component))))
 
 (defn game-tick [state _]
   (reduce (fn [sys ship]
             (if (not (:tt (e/get-component sys ship TT)))
               (-> sys
+                  (run-engine ship)
                   (u/apply-gravity ship)
-                  (speed-limit ship)
                   (u/move ship)
                   (bounds ship)
                   )
