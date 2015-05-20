@@ -12,7 +12,6 @@
 (defrecord Cannon [firing fire-timestamp fire-delay])
 (defrecord Score1 [score])
 (defrecord Score2 [score])
-(defrecord Score [])
 (defrecord Bullet [life-timestamp life-time])
 (defrecord Bullet1 [])
 (defrecord Bullet2 [])

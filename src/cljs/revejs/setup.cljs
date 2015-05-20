@@ -4,6 +4,7 @@
             [revejs.state :refer [game-state ship1-history ship2-history]]
             [revejs.draw :as draw]
             [revejs.ship :as ship]
+            [revejs.scoring :as scoring]
             [revejs.bullet :as bullet]
             [revejs.util :as u :refer [WIDTH HEIGHT]]
             [revejs.component :as c :refer [Ship Ship1 Ship2 Transform Velocity]]
@@ -13,10 +14,15 @@
 (enable-console-print!)
 
 (def FRAMERATE 60)
+
 (defn- start
     "Create all the initial entities with their components"
-    [system]
-    (ship/create-ship system)
+    [state]
+    (-> state
+        (ship/create-ship 1)
+        (scoring/create-score 1)
+        (ship/create-ship 2)
+        (scoring/create-score 2))
     )
 
 (defn setup-game-loop
@@ -44,9 +50,13 @@
 
 (defn setup []
   (do
-    (println "Started")
+    (println "The game has started")
     (state-reset)
+    (q/no-smooth) ;; Doesn't seem to do anything
+    (q/text-font (q/create-font "DejaVu Sans" 48 true))
+    (q/hint :disable-depth-test)
     (q/rect-mode :center)
+    (q/text-align :center)
     (q/frame-rate FRAMERATE)))
 
 (add-watch game-state :history

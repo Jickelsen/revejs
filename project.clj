@@ -38,7 +38,7 @@
                          :optimizations :none
                          :main revejs.core
                          :asset-path "js/compiled/out"
-                         :source-map true
+                         :source-map false
                          :source-map-timestamp true
                          :cache-analysis true }}
              ]}

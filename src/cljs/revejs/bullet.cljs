@@ -2,6 +2,7 @@
   (:require [quil.core :as q :include-macros true]
             [revejs.state :refer [game-state ship1-history ship2-history]]
             [revejs.util :as u :refer [WIDTH HEIGHT]]
+            [revejs.scoring :as scoring]
             [brute.entity :as e]
             [brute.system :as s]
             [cljs-time.core :as t]
@@ -17,9 +18,9 @@
   (q/fill 30 30 30)
   (cond 
     (= variant 1)
-    (q/fill 100 220 100)
+    (q/fill 221 72 147)
     (= variant 2)
-    (q/fill 100 100 220)
+    (q/fill 37 157 196)
     )
   (q/rect 0 0 w h)
   )
@@ -34,15 +35,9 @@
         entity-vel (e/get-component state entity Velocity)
         vel-x (:x entity-vel)
         vel-y (:y entity-vel)
-        pos-x (+ (:x entity-pos) (* (* (:w entity-pos) 2) (Math/cos (q/radians (:a entity-pos)))))
-        pos-y (+ (:y entity-pos) (* (* (:h entity-pos) 2) (Math/sin (q/radians (:a entity-pos)))))
+        pos-x (+ (:x entity-pos) (* (* (:w entity-pos) 1.3) (Math/cos (q/radians (:a entity-pos)))))
+        pos-y (+ (:y entity-pos) (* (* (:h entity-pos) 1.3) (Math/sin (q/radians (:a entity-pos)))))
         angle (:a entity-pos)
-        allegiance (cond
-                     (e/get-component state entity Ship1)
-                     (c/->Bullet1)
-                     (e/get-component state entity Ship2)
-                     (c/->Bullet2)
-                     )
         cannon (e/get-component state entity Cannon)
         {firing? :firing fire-timestamp :fire-timestamp fire-delay :fire-delay} cannon  
         ]
@@ -50,10 +45,18 @@
       (-> state
           (e/add-entity bullet)
           (e/add-component bullet (c/->Bullet (t/now) life-time))
-          (e/add-component bullet allegiance)
-          (e/add-component bullet (c/->Renderer render-bullet))
           (e/add-component bullet (c/->Transform pos-x pos-y (:a entity-pos) size-x size-y))
           (e/add-component bullet (u/add-thrust (c/->Velocity vel-x vel-y 0) entity-pos speed))
+          (#(cond
+               (e/get-component % entity Ship1)
+               (-> %
+                   (e/add-component bullet (c/->Bullet1))
+                   (e/add-component bullet (c/->Renderer (partial render-bullet size-x size-y 1))))
+               (e/get-component % entity Ship2)
+               (-> %
+                   (e/add-component bullet (c/->Bullet2))
+                   (e/add-component bullet (c/->Renderer (partial render-bullet size-x size-y 2)))))
+               )
           (e/add-component entity (c/->Cannon firing? (t/now) fire-delay))
           )
       state)))
@@ -85,7 +88,10 @@
   (reduce (fn [st ship]
             (if
               (u/collides-with (e/get-component st bullet Transform) (e/get-component st ship Transform))
-              (e/kill-entity st bullet)
+              (-> st 
+                  (e/kill-entity bullet)
+                  (scoring/score-hit-ship ship)
+                  )
               st))
           state (e/get-all-entities-with-component state Ship)))
 

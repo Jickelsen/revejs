@@ -1,16 +1,15 @@
 (ns revejs.util
   (:require [quil.core :as q :include-macros true]
+            [cljs.core.async :refer [chan close!]]
             [brute.entity :as e]
             [brute.system :as s]
-            [revejs.component :refer [Ship Ship1 Ship2 Transform Velocity TT Renderer Max_Thrust Max_Velocity]]
-            ))
+            [revejs.component :refer [Ship Ship1 Ship2 Transform Velocity TT Renderer Max_Thrust Max_Velocity]])
+  (:require-macros [cljs.core.async.macros :as m :refer [go]]))
 
-(def WIDTH 500)
-(def HEIGHT 500)
+(def WIDTH 400)
+(def HEIGHT 400)
 (def speed 1)
-(def gravity 0.00)
-
-(def FRAMERATE 60)
+(def gravity 0.0)
 
 (defn rotate [position ang-delta]
   (-> position
@@ -94,3 +93,15 @@
           (< (rect-bottom one) (:y two)) false
           (> (:y one) (rect-bottom two)) false
           :else true))
+
+(defn- timeout 
+  ;; https://gist.github.com/swannodette/5882703
+  [ms]
+  (let [c (chan)]
+    (js/setTimeout (fn [] (close! c)) ms)
+    c))
+
+(defn setTimeout [func ms]
+  (go
+    (<! (timeout ms))
+    (func)))

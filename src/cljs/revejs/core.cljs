@@ -13,7 +13,7 @@
   :host "canvas-id"
   :setup setup/setup 
   :draw setup/game-loop
-  ;; :renderer :p3d
+  :renderer :opengl
   :key-pressed input/key-pressed
   :key-released input/key-released
   )

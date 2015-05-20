@@ -10,56 +10,77 @@
 
 (def char-width 20)
 (def char-height 20)
-(def fire-delay 500)
+(def fire-delay 200)
 
 (defn render-ship [w h variant]
-  (q/fill 50 80 50)
-  (q/rect -2 0 5 14)
-  (cond 
-    (= variant 1)
-    (q/fill 100 220 100)
-    (= variant 2)
-    (q/fill 100 100 220)
-    )
-  (q/triangle 0 -10 25 0 0  10)
-  (q/fill 30 100 30)
-  (q/ellipse 8 0 8 8))
+  (let [tt
+        (cond (= variant 1)
+              (:tt (e/get-component @game-state (first (e/get-all-entities-with-component @game-state Ship1)) TT))
+              (= variant 2)
+              (:tt (e/get-component @game-state (first (e/get-all-entities-with-component @game-state Ship2)) TT))
+              )]
+    (q/fill 255 255 255)
+    (q/rect -10 0 5 14)
+    (cond 
+      (= variant 1)
+      (do
+        (if tt
+          (q/fill 10 10 10)
+          (q/fill 221 72 147))
+        (q/triangle -8 -10 17 0 -8 10)
+        (q/fill 247 229 51)
+        (q/ellipse 0 0 8 8)
+        )
+      (= variant 2)
+      (do
+        (if tt
+          (q/fill 10 10 10)
+          (q/fill 37 157 196))
+        (q/rect 4 0 25 15)
+        ;; (q/triangle 0 -10 25 0 0 10)
+        (q/fill 247 229 51)
+        (q/ellipse 0 0 8 8)))))
+
+(defn random-angle []
+  (rand-int 360))
+(defn random-coord [min max]
+  (+ min (rand (- max min))))
 
 (defn create-ship
     "Creates a ship entity"
-    [state]
-    (let [ship1 (e/create-entity)
-          ship2 (e/create-entity)
+    [state player]
+    (let [ship (e/create-entity)
           center-x (-> WIDTH (/ 2) (Math/floor))
           center-y (-> HEIGHT (/ 2) (Math/floor))
           ship-size 20
           ship-center-x (- center-x (/ 200 2))
           ship-center-y (- center-y (/ 200 2))
-          angle 0]
+          angle (random-angle)
+          min-x (* 0.15 WIDTH)
+          max-x (* 0.85 WIDTH)
+          min-y (* 0.15 HEIGHT)
+          max-y (* 0.85 HEIGHT)
+          x-coord (random-coord min-x max-x)
+          y-coord (random-coord min-y max-y)]
         (-> state
-            (e/add-entity ship1)
-            (e/add-entity ship2)
-            (e/add-component ship1 (c/->Ship))
-            (e/add-component ship2 (c/->Ship))
-            (e/add-component ship1 (c/->Ship1))
-            (e/add-component ship2 (c/->Ship2))
-            (e/add-component ship1 (c/->Renderer render-ship))
-            (e/add-component ship2 (c/->Renderer render-ship))
-            (e/add-component ship1 (c/->Transform (/ center-x 2) (/ center-y 2) angle char-width char-height))
-            (e/add-component ship2 (c/->Transform (* (/ center-x 2) 3) (* (/ center-y 2) 3) (+ 180 angle) char-width char-height))
-            (e/add-component ship1 (c/->Velocity 0 0 0))
-            (e/add-component ship2 (c/->Velocity 0 0 0))
-            (e/add-component ship1 (c/->Engine 0 0.1 2))
-            (e/add-component ship2 (c/->Engine 0 0.1 2))
-            (e/add-component ship1 (c/->Cannon false (t/now) fire-delay))
-            (e/add-component ship2 (c/->Cannon false (t/now) fire-delay))
-            (e/add-component ship1 (c/->TT false))
-            (e/add-component ship2 (c/->TT false))
-            (e/add-component ship1 (c/->Max_Thrust 2))
-            (e/add-component ship2 (c/->Max_Thrust 2))
-            (e/add-component ship1 (c/->Max_Velocity 3))
-            (e/add-component ship2 (c/->Max_Velocity 3))
-            )))
+            (e/add-entity ship)
+            (e/add-component ship (c/->Ship))
+            (e/add-component ship (c/->Transform x-coord y-coord angle char-width char-height))
+            (e/add-component ship (c/->Velocity 0 0 0))
+            (e/add-component ship (c/->Engine 0 0.1 3))
+            (e/add-component ship (c/->Cannon false (t/now) fire-delay))
+            (e/add-component ship (c/->TT false))
+            (e/add-component ship (c/->Max_Thrust 2))
+            (e/add-component ship (c/->Max_Velocity 3))
+            (#(cond
+                (= player 1)
+                (-> %
+                    (e/add-component ship (c/->Ship1))
+                    (e/add-component ship (c/->Renderer (partial render-ship char-width char-height 1))))
+                (= player 2)
+                (-> %
+                    (e/add-component ship (c/->Ship2))
+                    (e/add-component ship (c/->Renderer (partial render-ship char-width char-height 2)))))))))
 
 (defn bounds [state movable]
   (let [pos (e/get-component state movable Transform)
@@ -91,7 +112,7 @@
                                             0
                                             (:x %))))
                                 (assoc :y (if (>= (:y pos) HEIGHT)
-                                            WIDTH
+                                            HEIGHT
                                             (if (<= (:y pos) 0)
                                             0
                                             (:y %))))
