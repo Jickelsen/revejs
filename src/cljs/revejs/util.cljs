@@ -1,3 +1,4 @@
+
 (ns revejs.util
   (:require [quil.core :as q :include-macros true]
             [cljs.core.async :refer [chan close!]]
@@ -6,8 +7,8 @@
             [revejs.component :refer [Ship Ship1 Ship2 Transform Velocity TT Renderer Max_Thrust Max_Velocity]])
   (:require-macros [cljs.core.async.macros :as m :refer [go]]))
 
-(def WIDTH 400)
-(def HEIGHT 400)
+(def WIDTH 500)
+(def HEIGHT 500)
 (def speed 1)
 (def gravity 0.0)
 

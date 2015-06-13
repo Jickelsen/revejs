@@ -22,12 +22,16 @@
   (if (e/get-component st hit-ship Ship1)
     (-> st
         (e/update-component (first (brute.entity/get-all-entities-with-component st Score2)) Score2 #(update-in % [:score]inc))
-      (e/kill-entity hit-ship)
+        (#(do (reset! ship1-history [])
+             %))
+        (e/kill-entity hit-ship)
       ((fn [st] (do 
                   (revejs.util/setTimeout (partial swap! game-state #(revejs.ship/create-ship % 1)) 500)
                   st))))
     (-> st
         (e/update-component (first (brute.entity/get-all-entities-with-component st Score1)) Score1 #(update-in % [:score]inc))
+        (#(do (reset! ship2-history [])
+             %))
         (e/kill-entity hit-ship)
       ((fn [st] (do 
                   (revejs.util/setTimeout (partial swap! game-state #(revejs.ship/create-ship % 2)) 500)
