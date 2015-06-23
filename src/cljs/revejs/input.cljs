@@ -19,6 +19,7 @@
    39 :right
    40 :down
    16 :shift
+   188 :comma
    190 :.
    18 :alt
    157 :cmd
@@ -30,7 +31,8 @@
    68 :d
    83 :s
    67 :c
-   81 :q})
+   86 :v
+   81 :v})
 
 (defn key-pressed [event]
   ;; (println (q/key-code))
@@ -73,15 +75,15 @@
          (reset! game-state (e/update-component @game-state ship2 Velocity u/spin -3))
          (= (keycodes (q/key-code)) :right)
          (reset! game-state (e/update-component @game-state ship2 Velocity u/spin 3))
-         (= (keycodes (q/key-code)) :.)
+         (= (keycodes (q/key-code)) :comma)
          (swap! game-state #(bullet/start-firing % ship2))
          ))
       (cond
-       (= (keycodes (q/key-code)) :q)  
+       (= (keycodes (q/key-code)) :v)  
        (do
          (println (str "tt1 is " (:tt (e/get-component @game-state ship1 TT))))
          (reset! game-state (e/update-component @game-state ship1 TT #(assoc % :tt (not (:tt %))))))
-       (= (keycodes (q/key-code)) :shift)  
+       (= (keycodes (q/key-code)) :.)  
        (reset! game-state (e/update-component @game-state ship2 TT #(assoc % :tt (not (:tt %)))))
        (or (= (keycodes (q/key-code)) :return)(= (keycodes (q/key-code)) :enter)) 
        (do (println "Reset state")
@@ -113,7 +115,7 @@
          (reset! game-state (e/update-component @game-state ship1 Velocity u/spin 0))
          (= (keycodes (q/key-code)) :c)
          (swap! game-state #(bullet/stop-firing % ship1))
-         (= (keycodes (q/key-code)) :.)
+         (= (keycodes (q/key-code)) :comma)
          (swap! game-state #(bullet/stop-firing % ship2))
          ))
       (if (not tt2)
